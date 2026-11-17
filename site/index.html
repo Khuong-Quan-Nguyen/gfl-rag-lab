@@ -122,6 +122,27 @@
     box-shadow: 0 6px 20px rgba(0,0,0,.4); opacity: 0; transition: opacity .1s; max-width: 260px;
   }
   #tip .m { color: var(--muted); }
+  .plain {
+    margin: 16px 0 0; padding: 12px 14px 12px 16px; border-left: 3px solid var(--accent);
+    background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0; color: var(--ink-2); font-size: 14.5px;
+  }
+  .plain b.lbl { display: block; color: var(--ink); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+  .plain p { margin: 0 0 6px; } .plain p:last-child { margin: 0; }
+  a.term { color: inherit; text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
+  a.term:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .steps .card h3 { color: var(--ink); font-size: 16px; }
+  .steps .card p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+  .steps .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+                background: var(--surface-2); border: 1px solid var(--border); color: var(--accent); font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  ol.flow { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 14.5px; }
+  ol.flow li { margin: 0 0 6px; } ol.flow b { color: var(--ink); }
+  dl.gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; margin: 0; }
+  dl.gloss > div { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; scroll-margin-top: 16px; }
+  dl.gloss > div:target { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  dl.gloss dt { font-weight: 650; margin-bottom: 3px; }
+  dl.gloss dd { margin: 0; color: var(--ink-2); font-size: 14px; }
+  dl.gloss dd i { color: var(--ink); font-style: italic; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
 </head>
@@ -136,14 +157,50 @@
       reports. 40 hand-labelled questions, split into conceptual and exact-term, run through four retrieval modes.</p>
     <div class="links">
       <a class="btn primary" href="https://github.com/Khuong-Quan-Nguyen/gfl-rag-lab">View code on GitHub</a>
+      <a class="btn" href="#plain">Plain-English intro</a>
       <a class="btn" href="#results">Results</a>
-      <a class="btn" href="#questions">Eval questions</a>
+      <a class="btn" href="#glossary">Glossary</a>
     </div>
     <div class="tiles" id="tiles"></div>
   </div>
 </header>
 
 <main class="wrap">
+  <section id="plain">
+    <h2>What is this, in plain English?</h2>
+    <p class="sub">Think of a very fast librarian for two long company reports (about 200 pages in total).</p>
+    <div class="steps">
+      <div class="card">
+        <span class="num">1</span>
+        <h3>The problem</h3>
+        <p>You want to ask questions about GFL's reports, like "What were the 2024 revenues?", and get a correct
+          answer with the page it came from, without reading 200 pages yourself. An AI can write the answer,
+          but only if it is first handed the <em>right pages</em>. Finding those pages is the hard part.</p>
+      </div>
+      <div class="card">
+        <span class="num">2</span>
+        <h3>What was built</h3>
+        <p>A system that cuts the reports into short passages, finds the passages that best match your question,
+          and lets Claude (an AI model) write an answer <em>only</em> from them, citing each page. If nothing
+          relevant is found, it says "Not found" instead of guessing. This setup is called
+          <a class="term" href="#g-rag">RAG</a>.</p>
+      </div>
+      <div class="card">
+        <span class="num">3</span>
+        <h3>What was tested</h3>
+        <p>There are several ways to find the right passages: search by <em>meaning</em>, search by
+          <em>exact words</em>, or both. We wrote 40 test questions with known answer pages and measured which way
+          puts the right page closest to the top, for "big picture" questions and for questions with exact
+          names and numbers.</p>
+      </div>
+    </div>
+    <div class="plain">
+      <b class="lbl">The short answer</b>
+      <p>Combining both kinds of search, then asking a second model to re-sort the results, found the right page best,
+        especially for questions with exact names and figures. It costs about one extra second per question.</p>
+    </div>
+  </section>
+
   <section id="results">
     <h2>Retrieval quality by question type</h2>
     <p class="sub" id="results-sub"></p>
@@ -173,6 +230,17 @@
         <tbody></tbody>
       </table>
     </div>
+    <div class="plain">
+      <b class="lbl">In plain terms</b>
+      <p>Each row is a different way of searching. <a class="term" href="#g-vector">Vector</a> search matches by meaning,
+        <a class="term" href="#g-hybrid">hybrid</a> adds a classic keyword search, and
+        "+ rerank" adds a second model (a <a class="term" href="#g-reranker">reranker</a>) that re-reads the top results and re-sorts them.</p>
+      <p><a class="term" href="#g-mrr">MRR</a> scores how high the correct page shows up: 1.0 means it is always first,
+        0.5 means it is usually second. <a class="term" href="#g-recall">Recall@10</a> is how often the correct page is anywhere
+        in the top 10, and <a class="term" href="#g-top1">top-1</a> is how often it is the very first result.
+        <a class="term" href="#g-p50">p50</a> search is the typical time one search takes.
+        <a class="term" href="#g-types">Conceptual vs exact-term</a> are the two kinds of test question.</p>
+    </div>
   </section>
 
   <section id="latency">
@@ -181,6 +249,12 @@
     <div class="card">
       <div class="latency-bars" id="latency-bars"></div>
       <p class="note">Dots are the 10 individual runs; the bar is the median (p50).</p>
+    </div>
+    <div class="plain">
+      <b class="lbl">In plain terms</b>
+      <p>The search uses two AI models that take several seconds to load into memory. Loading them for every question is like
+        restarting an app each time you use it. Keeping one program running with the models already loaded
+        (a <a class="term" href="#g-service">service</a>) cut the wait from about 8.6 seconds to under 1 second per question.</p>
     </div>
   </section>
 
@@ -204,6 +278,15 @@
         <p>$7,862.0 million vs $7,515.5 million in 2023, with the segment split, cited to annual report pp. 156–157. ~5 s end to end, ~$0.02.</p>
       </div>
     </div>
+    <div class="plain">
+      <b class="lbl">In plain terms</b>
+      <p>AI models can "hallucinate": write a confident answer that isn't true. Here the system would rather say
+        "I don't know" than guess. First, if even the best-matching passage is only loosely related
+        (its <a class="term" href="#g-similarity">similarity score</a> is below a cut-off, the
+        <a class="term" href="#g-threshold">threshold</a>), it stops and never calls the AI. Second, the AI is told to answer
+        only from the passages it was given and to name the page for every fact (a <a class="term" href="#g-citation">citation</a>),
+        so any answer can be checked.</p>
+    </div>
   </section>
 
   <section id="architecture">
@@ -221,6 +304,21 @@ question ─► FastAPI service (models loaded once)
               Claude ─► answer from top 5 chunks with [doc p.N] citations
               telemetry ─► traces ─► Streamlit ops console</pre>
     <div class="stack" id="stack"></div>
+    <div class="plain">
+      <b class="lbl">In plain terms: what happens to a question</b>
+      <ol class="flow">
+        <li><b>Prepare once:</b> the two PDFs are split into 851 short passages (<a class="term" href="#g-chunk">chunks</a>) of about
+          180 words. Each one gets a list of numbers describing its meaning (an <a class="term" href="#g-embedding">embedding</a>)
+          and is stored in a <a class="term" href="#g-database">database</a>.</li>
+        <li><b>Search:</b> your question is turned into the same kind of numbers, and the database finds passages with similar
+          meaning plus passages that share your exact words. The two lists are merged (<a class="term" href="#g-rrf">RRF</a>).</li>
+        <li><b>Re-sort:</b> the <a class="term" href="#g-reranker">reranker</a> reads the question next to each of the top 30 passages
+          and puts the best ones first.</li>
+        <li><b>Answer:</b> the top 5 passages go to Claude, which writes a short answer with page citations, or says "Not found".</li>
+        <li><b>Record:</b> every question is logged with its timing, cost and confidence (a <a class="term" href="#g-trace">trace</a>)
+          so it can be reviewed on the dashboard.</li>
+      </ol>
+    </div>
   </section>
 
   <section id="dashboard">
@@ -230,6 +328,12 @@ question ─► FastAPI service (models loaded once)
       <img src="img/dashboard.png" alt="Streamlit ops console showing stat tiles, an MRR bar chart by mode and question type, a latency waterfall and a low-confidence feed">
       <figcaption>Streamlit dashboard running locally against the FastAPI service and Postgres traces.</figcaption>
     </figure>
+    <div class="plain">
+      <b class="lbl">In plain terms</b>
+      <p>A control panel for the system. It shows how fast answers are, how much they cost, how often something fails,
+        how each step of a question took its time, and which questions the system was least sure about, next to the
+        test scores. Problems show up here before users notice them.</p>
+    </div>
   </section>
 
   <section id="questions">
@@ -250,6 +354,43 @@ question ─► FastAPI service (models loaded once)
       </table>
     </div>
     <p class="note" id="qcount"></p>
+    <div class="plain">
+      <b class="lbl">How to read this table</b>
+      <p>This is the <a class="term" href="#g-eval">eval set</a>: each question was written with a known answer and the page it is on.
+        The four number columns are the four search methods. "1" means the correct page was the first result (best),
+        "3" means it was third, and "—" means it was not in the top 10 at all. Use the buttons to compare
+        big-picture questions with exact-term ones.</p>
+    </div>
+  </section>
+
+  <section id="glossary">
+    <h2>Glossary</h2>
+    <p class="sub">The key words on this page, in everyday language.</p>
+    <dl class="gloss">
+      <div id="g-rag"><dt>RAG (retrieval-augmented generation)</dt><dd>First <b>retrieve</b> the relevant passages from your documents, then let an AI <b>generate</b> an answer using only those passages. It keeps answers grounded in real sources instead of the AI's memory.</dd></div>
+      <div id="g-llm"><dt>LLM / Claude</dt><dd>A large language model: an AI that reads and writes text. Claude, made by Anthropic, writes the final answers here.</dd></div>
+      <div id="g-chunk"><dt>Chunk</dt><dd>A short passage (about 180 words) cut from a report. Search works on chunks, not whole documents, so it can point to the exact page.</dd></div>
+      <div id="g-embedding"><dt>Embedding</dt><dd>A list of 384 numbers that captures what a piece of text <i>means</i>. Texts with similar meaning get similar numbers, even if they use different words.</dd></div>
+      <div id="g-vector"><dt>Vector search (semantic search)</dt><dd>Finding chunks whose embeddings are closest to the question's. Good at meaning ("money made" ≈ "revenue"), weaker at exact names, codes and numbers.</dd></div>
+      <div id="g-keyword"><dt>Keyword search (full-text search)</dt><dd>Classic search that matches the actual words in the question, like a search engine. Good at exact terms, blind to synonyms.</dd></div>
+      <div id="g-hybrid"><dt>Hybrid search</dt><dd>Running vector and keyword search together and merging the results, to get the strengths of both.</dd></div>
+      <div id="g-rrf"><dt>RRF (reciprocal rank fusion)</dt><dd>A simple way to merge two ranked lists: a chunk scores higher the nearer the top it appears in <i>either</i> list.</dd></div>
+      <div id="g-reranker"><dt>Reranker (cross-encoder)</dt><dd>A second, slower model that reads the question and each candidate chunk side by side and re-sorts them by how well the chunk answers it. More accurate, but adds about a second.</dd></div>
+      <div id="g-similarity"><dt>Similarity score</dt><dd>How close a chunk's meaning is to the question, from 0 (unrelated) to 1 (same meaning). Here, real questions scored 0.46 or more and off-topic ones 0.29 or less.</dd></div>
+      <div id="g-threshold"><dt>Threshold / abstain</dt><dd>The cut-off (0.38) below which the system <b>abstains</b>: it answers "Not found" instead of asking the AI, because the context is too thin to answer from.</dd></div>
+      <div id="g-citation"><dt>Citation</dt><dd>The source label after each sentence, such as [annual_report_2024 p.156], so anyone can open the page and check the fact.</dd></div>
+      <div id="g-eval"><dt>Eval set</dt><dd>A fixed list of test questions with known answers and pages. Running every search method on the same list makes the comparison fair and repeatable.</dd></div>
+      <div id="g-types"><dt>Conceptual vs exact-term questions</dt><dd><b>Conceptual:</b> "how" or "why" questions in everyday words. <b>Exact-term:</b> questions that hinge on a specific name, figure or code, like a facility name or a 2024 dollar amount.</dd></div>
+      <div id="g-mrr"><dt>MRR (mean reciprocal rank)</dt><dd>Average of 1 ÷ (position of the first correct result). Correct at #1 scores 1, at #2 scores 0.5, at #4 scores 0.25, missing scores 0. Higher is better; 1.0 is perfect.</dd></div>
+      <div id="g-recall"><dt>Recall@10</dt><dd>The share of questions where the correct page appears anywhere in the top 10 results.</dd></div>
+      <div id="g-top1"><dt>Top-1</dt><dd>The share of questions where the very first result is the correct page.</dd></div>
+      <div id="g-p50"><dt>Latency, p50 and p99</dt><dd><b>Latency</b> is how long you wait. <b>p50</b> (the median) is the typical wait: half of requests are faster. <b>p99</b> is the slow tail: 99% are faster than this.</dd></div>
+      <div id="g-service"><dt>Service / API</dt><dd>A program that stays running and answers requests from other programs. Here it keeps the AI models loaded so each question doesn't pay the start-up cost.</dd></div>
+      <div id="g-database"><dt>Database (Postgres + pgvector)</dt><dd>Postgres stores the chunks; the pgvector add-on lets it store embeddings and quickly find the closest ones.</dd></div>
+      <div id="g-trace"><dt>Trace</dt><dd>A log record of one question: which method ran, how long each step took, how many tokens it used, the cost and the confidence.</dd></div>
+      <div id="g-tokens"><dt>Tokens</dt><dd>The pieces of text an AI model reads and writes (roughly ¾ of a word each). API usage is billed per token.</dd></div>
+      <div id="g-hallucination"><dt>Hallucination</dt><dd>When an AI states something false with confidence. Grounding answers in retrieved passages, with citations and the option to say "Not found", reduces it.</dd></div>
+    </dl>
   </section>
 </main>
 
