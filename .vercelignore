@@ -1,0 +1,4 @@
+# Vercel serves only the static showcase in site/. The Python app, data and tools stay out of the deploy.
+/*
+!site
+!vercel.json

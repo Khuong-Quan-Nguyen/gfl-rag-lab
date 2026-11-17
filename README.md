@@ -142,6 +142,11 @@ $py = ".\.venv\Scripts\python.exe"
 & $py -m pytest -q                                     # 12 tests (dashboard test needs Postgres)
 ```
 
+**Static showcase (Vercel):** `site/` is a static page with the results, latency, guardrail and all 40
+questions. After a new eval run, refresh it with `& $py -m scripts.build_site`, then commit `site/data.js`.
+`vercel.json` serves `site/` with no build step; the Python service and database stay local because
+torch and a local Postgres don't fit Vercel functions.
+
 API: `POST /ask {"question": "...", "mode": "hybrid_rerank"}` returns the answer, citations, timings
 and trace_id. `POST /search` returns retrieval only. `GET /health` reports service status.
 
@@ -161,7 +166,7 @@ and trace_id. `POST /search` returns retrieval only. `GET /health` reports servi
 
 - Filtered search (`WHERE doc_year = …`) and its recall cost with HNSW vs StreamingDiskANN.
 - Faithfulness scoring of generated answers against their cited chunks.
-- A React/Vite frontend (deployable to Vercel) talking to the FastAPI service hosted elsewhere.
+- A live Ask demo: the FastAPI service on a container host plus hosted Postgres, called from the Vercel page.
 
 ## Credits
 
