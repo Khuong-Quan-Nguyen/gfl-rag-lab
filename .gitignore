@@ -8,3 +8,4 @@ evals/results/*.json
 
 .tools/
 .pgdata/
+PLAN.md
