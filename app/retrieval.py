@@ -22,6 +22,7 @@ MODES = ("vector", "hybrid", "vector_rerank", "hybrid_rerank")
 RRF_K = 60
 FUSION_DEPTH = 50
 RERANK_DEPTH = 30
+RERANK_MAX_TOKENS = 256
 
 
 @dataclass
@@ -65,7 +66,8 @@ class Models:
             if self.embedder is None:
                 self.embedder = SentenceTransformer(settings.embed_model, device="cpu")
             if rerank and self.reranker is None:
-                self.reranker = CrossEncoder(settings.rerank_model, device="cpu")
+                # 256 tokens covers a ~180-word chunk + question; halves CPU rerank time vs the 512 default.
+                self.reranker = CrossEncoder(settings.rerank_model, device="cpu", max_length=RERANK_MAX_TOKENS)
         return self
 
 
