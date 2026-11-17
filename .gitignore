@@ -5,3 +5,6 @@ __pycache__/
 data/raw/
 evals/results/*.json
 .streamlit/secrets.toml
+
+.tools/
+.pgdata/
